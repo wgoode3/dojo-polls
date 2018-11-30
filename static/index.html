@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
+    <style>
+        button {
+            vertical-align: top;
+            width: 300px;
+            height: 100px;
+            font-size: 2rem;
+            border-radius: 20px;
+            background-color:blanchedalmond;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dojo Poll</h1>
+
+    <img src="/imgs/fortnite.jpg" width="500px" alt="fortnite">
+    <h1>VS</h1>
+    <img src="/imgs/pubg.jpg" width="500px" alt="pubg">
+
+    <h3>Is Playerunknown's Battlegrounds (PUBG) better than Fortnite?</h3>
+
+    <button id="yes">Yes!!</button>
+    <button id="no">No!!!</button>
+    <button id="meh">What is this I don't even?</button>
+
+    <div style="width:500px;height:500px;">
+        <canvas id="pie" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+    $(document).ready(function (){
+    
+        var socket = io(); 
+        var chartdata = {
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: [
+                    'red',
+                    'yellow',
+                    'blue'
+                ]
+            }],
+
+            labels: [
+                'yes',
+                'no',
+                'meh'
+            ]
+        };
+
+        socket.emit('c', {msg: 'just connected'});
+        socket.on('d', function(data){
+            mapVotes(data);
+            var myPieChart = new Chart(ctx,{
+                type: 'pie',
+                data: chartdata
+            });
+            console.log(myPieChart);
+        });
+
+        $('#yes').click(function(){
+            if(!localStorage.getItem("voted")){
+                socket.emit('vote', {choice: 'yes'});
+                localStorage.setItem("voted", true);
+            }
+        });
+        $('#no').click(function(){
+            if(!localStorage.getItem("voted")){
+                socket.emit('vote', {choice: 'no'});
+                localStorage.setItem("voted", true);
+            }
+        });
+        $('#meh').click(function(){
+            if(!localStorage.getItem("voted")){
+                socket.emit('vote', {choice: 'meh'});
+                localStorage.setItem("voted", true);
+            }
+        });
+
+        socket.on('results', function(data){
+            console.log(data);
+            mapVotes(data);
+            var myPieChart = new Chart(ctx,{
+                type: 'pie',
+                data: chartdata
+            });
+        });
+
+        var ctx = document.getElementById("pie").getContext('2d');
+        var myPieChart = new Chart(ctx,{
+            type: 'pie',
+            data: chartdata
+        });
+
+        function mapVotes(dict){
+            var v = [];
+            for(let key in dict){
+                v.push(dict[key]);
+            }
+            chartdata.datasets[0].data = v;
+        }
+
+
+    })
+    </script>
+</body>
+</html>
